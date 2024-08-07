@@ -1,0 +1,22 @@
+[26/10/2023 19:20:18.929]	 INFO 	[server.ready_check:83]	 Acceso a ReadyCheck
+[26/10/2023 19:20:19.311]	 INFO 	[server.loggin_works:101]	 Checking if loggin works as expected
+[26/10/2023 19:20:24.821]	 INFO 	[server.metrics_show:115]	 Acceso a Metrics
+[26/10/2023 19:21:02.45]	 INFO 	[server.signup_user:50]	 Acceso a SignUp
+[26/10/2023 20:31:29.201]	 INFO 	[server.ready_check:83]	 Acceso a ReadyCheck
+[26/10/2023 20:31:29.334]	 INFO 	[server.loggin_works:101]	 Checking if loggin works as expected
+[26/10/2023 20:31:34.481]	 INFO 	[server.home:27]	 Acceso a Home
+[26/10/2023 20:31:38.351]	 INFO 	[server.metrics_show:115]	 Acceso a Metrics
+[26/10/2023 20:31:41.779]	 INFO 	[server.health_check:108]	 Acceso a HealthCheck
+[26/10/2023 20:31:44.942]	 INFO 	[server.signup_user:50]	 Acceso a SignUp
+[26/10/2023 20:32:00.236]	 INFO 	[server.signup_user:50]	 Acceso a SignUp
+[26/10/2023 20:32:17.469]	 INFO 	[server.signup_user:50]	 Acceso a SignUp
+[26/10/2023 20:33:18.828]	 INFO 	[server.ready_check:83]	 Acceso a ReadyCheck
+[26/10/2023 20:33:18.929]	 INFO 	[server.loggin_works:101]	 Checking if loggin works as expected
+[26/10/2023 20:33:23.172]	 INFO 	[server.signup_user:50]	 Acceso a SignUp
+[26/10/2023 20:47:29.525]	 INFO 	[server.ready_check:83]	 Acceso a ReadyCheck
+[26/10/2023 20:47:30.26]	 INFO 	[server.loggin_works:101]	 Checking if loggin works as expected
+[26/10/2023 20:51:28.808]	 INFO 	[server.ready_check:83]	 Acceso a ReadyCheck
+[26/10/2023 20:51:28.845]	 INFO 	[server.loggin_works:101]	 Checking if loggin works as expected
+[26/10/2023 20:51:31.836]	 INFO 	[server.signup_user:50]	 Acceso a SignUp
+[26/10/2023 20:57:05.808]	 INFO 	[server.get_all_users:65]	 Acceso a ListUsers
+[26/10/2023 20:57:29.172]	 INFO 	[server.get_all_users:65]	 Acceso a ListUsers

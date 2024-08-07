@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+
+{% block body %}
+<div class="container">
+
+	<table>
+		<thead>
+			<tr>
+				<th>Username</th>
+				<th align="center">High score (solo)</th>
+			</tr>
+		</thead>
+		<tbody>
+
+			{% for solorow in solo %}
+			<tr>
+				<th>{{ solorow[0] }}</th>
+				<td align="center">{{ solorow[1] }}</td>
+			</tr>
+			{% endfor %}
+
+		</tbody>
+	</table>
+
+	<table>
+		<thead>
+			<tr>
+				<th>Username</th>
+				<th align="center">High score (duo)</th>
+			</tr>
+		</thead>
+		<tbody>
+
+			{% for duorow in duo %}
+			<tr>
+				<th>{{ duorow[0] }}</th>
+				<td align="center">{{ duorow[1] }}</td>
+			</tr>
+			{% endfor %}
+
+		</tbody>
+	</table>
+
+</div>
+
+{% endblock %}

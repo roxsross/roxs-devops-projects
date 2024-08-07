@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+	<title>Tetris</title>
+	<link rel="stylesheet" href="https://unpkg.com/terminal.css@0.7.1/dist/terminal.min.css" />
+
+	{% block scripts %} {% endblock %}
+
+</head>
+
+<body class="terminal">
+
+	<div class="container">
+		<div class="terminal-nav">
+			<header class="terminal-logo">
+				<div class="logo terminal-prompt"><a href={{ url_for('index') }} class="no-style">Tengen Tetris v2</a></div>
+			</header>
+			<nav class="terminal-menu">
+				<ul vocab="https://schema.org/" typeof="BreadcrumbList">
+					<li><a href={{ url_for('solo') }} class="menu-item active"><span>Play solo</span></a>
+						<meta property="position">
+					</li>
+					<li><a href={{ url_for('duo') }} class="menu-item active"><span>Play duo</span></a>
+						<meta property="position">
+					</li>
+					<li><a href={{ url_for('scoreboard') }} class="menu-item active"><span>Score board</span></a>
+						<meta property="position">
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+
+	{% block body %} {% endblock %}
+
+</body>
+
+</html>

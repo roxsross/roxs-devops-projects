@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+
+{% block scripts %}
+<!-- Load the socket io library -->
+<script src="https://cdn.socket.io/4.0.1/socket.io.min.js"
+	integrity="sha384-LzhRnpGmQP+lOvWruF/lgkcqD+WDVt9fU3H4BWmwP5u5LTmkUGafMcpZKNObVMLU"
+	crossorigin="anonymous"></script>
+
+<!-- Load the p5.js library to create sketches -->
+<script src="https://cdn.jsdelivr.net/npm/p5"></script>
+
+<!-- Main script for the canvas -->
+<script src="{{ url_for('static', filename='sketch.js') }}"></script>
+
+<!-- Load the various JavaScript files for the client -->
+<script src="{{ url_for('static', filename='elementbox.js') }}"></script>
+<script src="{{ url_for('static', filename='nextpiecegenerator.js') }}"></script>
+<script src="{{ url_for('static', filename='client.js') }}"></script>
+<script src="{{ url_for('static', filename='arena.js') }}"></script>
+<script src="{{ url_for('static', filename='grid.js') }}"></script>
+<script src="{{ url_for('static', filename='square.js') }}"></script>
+<script src="{{ url_for('static', filename='piece.js') }}"></script>
+<script src="{{ url_for('static', filename='stopwatch.js') }}"></script>
+<script src="{{ url_for('static', filename='textbox.js') }}"></script>
+<script src="{{ url_for('static', filename='piecebox.js') }}"></script>
+<script src="{{ url_for('static', filename='nextpiecebox.js') }}"></script>
+<script src="{{ url_for('static', filename='statbox.js') }}"></script>
+<script src="{{ url_for('static', filename='tickbox.js') }}"></script>
+<script src="{{ url_for('static', filename='selectorbox.js') }}"></script>
+<script src="{{ url_for('static', filename='inputbox.js') }}"></script>
+<script src="{{ url_for('static', filename='das.js') }}"></script>
+{% endblock %}
+
+{% block body %}
+{% block maincontent %}{% endblock %}
+{% endblock %}

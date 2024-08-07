@@ -1,0 +1,111 @@
+version: '3.3'
+services:
+  ui:
+    container_name: ui
+    build: ./src/ui
+    ports:
+      - 8888:8080
+    environment:
+      - JAVA_OPTS=-XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/urandom
+      - SERVER_TOMCAT_ACCESSLOG_ENABLED=true
+      - ENDPOINTS_CATALOG=http://catalog:8080
+      - ENDPOINTS_CARTS=http://carts:8080
+      - ENDPOINTS_ORDERS=http://orders:8080
+      - ENDPOINTS_CHECKOUT=http://checkout:8080
+      - ENDPOINTS_ASSETS=http://assets:8080
+    restart: always
+
+  catalog:
+    container_name: catalog
+    build: ./src/catalog
+    restart: always
+    environment:
+      - GIN_MODE=release
+      - DB_PASSWORD=secret
+
+
+  catalog-db:
+    image: mariadb:10.9
+    container_name: catalog-db
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=secret
+      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+      - MYSQL_DATABASE=sampledb
+      - MYSQL_USER=catalog_user
+      - MYSQL_PASSWORD=secret
+
+  carts:
+    container_name: carts
+    build: ./src/cart
+    restart: always
+    environment:
+      - JAVA_OPTS=-XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/urandom
+      - SERVER_TOMCAT_ACCESSLOG_ENABLED=true
+      - SPRING_PROFILES_ACTIVE=dynamodb
+      - CARTS_DYNAMODB_ENDPOINT=http://carts-db:8000
+      - CARTS_DYNAMODB_CREATETABLE=true
+      - AWS_ACCESS_KEY_ID=key
+      - AWS_SECRET_ACCESS_KEY=dummy
+
+  carts-db:
+    image: amazon/dynamodb-local:1.20.0
+    container_name: carts-db
+    restart: always
+
+
+  orders:
+    build: ./src/orders
+    container_name: orders
+    restart: always
+    environment:
+      - JAVA_OPTS=-XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/urandom
+      - SERVER_TOMCAT_ACCESSLOG_ENABLED=true
+      - SPRING_PROFILES_ACTIVE=mysql,rabbitmq
+      - SPRING_DATASOURCE_WRITER_URL=jdbc:mariadb://orders-db:3306/orders
+      - SPRING_DATASOURCE_WRITER_USERNAME=orders_user
+      - SPRING_DATASOURCE_WRITER_PASSWORD=secret
+      - SPRING_DATASOURCE_READER_URL=jdbc:mariadb://orders-db:3306/orders
+      - SPRING_DATASOURCE_READER_USERNAME=orders_user
+      - SPRING_DATASOURCE_READER_PASSWORD=secret
+      - SPRING_RABBITMQ_HOST=rabbitmq
+
+
+  orders-db:
+    image: mariadb:10.9
+    container_name: orders-db
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=secret
+      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+      - MYSQL_DATABASE=orders
+      - MYSQL_USER=orders_user
+      - MYSQL_PASSWORD=secret
+
+  checkout:
+    build: ./src/checkout
+    container_name: checkout
+    restart: always
+    read_only: true
+    environment:
+      - REDIS_URL=redis://checkout-redis:6379
+      - ENDPOINTS_ORDERS=http://orders:8080
+
+  checkout-redis:
+    image: redis:6-alpine
+    container_name: checkout-redis
+    restart: always
+
+  assets:
+    build: ./src/assets
+    container_name: assets
+    environment:
+      - PORT=8080
+    restart: always
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"

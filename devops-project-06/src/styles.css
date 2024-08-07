@@ -1,0 +1,378 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+
+body {
+  background-image: url("../images/background.png");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-attachment: fixed;
+  font-family: 'Poppins', sans-serif;  
+  margin: 0;
+  padding: 0;
+}
+
+.App {
+  text-align: center;
+  margin: 50px auto 0;
+  width: 90%;
+  max-width: 700px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
+  box-shadow: 0 5px 5px rgba(0, 0, 0, 0.5);
+  padding: 20px 15px;
+}
+
+.SearchEngine {
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-bottom: 30px;
+  margin-top: 10px;
+} 
+
+.SearchEngine input {
+  width: 70%;
+  height: 40px;
+  border: none;
+  border-radius: 5px; /* Updated */
+  padding: 2px 15px;
+  font-size: 16px;
+  outline: none;
+  background-color: #fff;
+  color: #555;
+}
+
+.SearchEngine input::placeholder {
+  color: #555;
+  font-weight: 500;
+  font-style: italic;
+}
+
+.SearchEngine button {
+  width: 78px; /* Updated */
+  height: 44px; /* Updated */
+  border: none;
+  border-radius: 9%; /* Updated */
+  background-color: #84cef5; /* Updated */
+  color: #fff;
+  font-size: 20px;
+  outline: none;
+  cursor: pointer;
+}
+
+.SearchEngine button:hover {
+  background-color: #fff;
+}
+
+.SearchEngine button:hover i {
+  color: #f06789;
+}
+
+.error-message {
+  display: block;
+  text-align: center;
+  color: #f06789;
+  font-size: 30px;
+  font-weight: bold;
+  margin-top: auto;
+}
+
+.city-name {
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+.date {
+  font-size: 18px;
+  font-weight: 500;
+  font-style: oblique;
+}
+
+.temp {
+  font-size: 64px;
+  font-weight: 700;
+  color: #1e2432;
+  text-align: center;
+}
+
+.temp-deg {
+  font-size: 32px;
+  cursor: pointer;
+}
+
+.temp-icon{
+  width: 20%;
+}
+
+.weather-des {
+  color: #f06789;
+  font-size: 20px;
+  font-weight: 500;
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.weather-info {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  margin-top: 20px;
+  padding: 0 20px;
+  color: #1e2432;
+  font-size: 20px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.col {
+  display: flex;
+  align-items: center;
+  text-align: start;
+  line-height: 1px;
+}
+
+.col p{
+  margin-left: 5px;
+}
+
+.forecast-container {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  color: #1e2432;
+}
+
+.day {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 10px;
+  margin: 10px;
+  border-radius: 10px;
+  background-color: #fff;
+  box-shadow: 0 5px 5px rgba(0, 0, 0, 0.5);
+}
+
+.day:hover {
+  background-color: aliceblue;
+}
+
+.day-name {
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+
+.day-icon {
+  width: 50px;
+  height: 50px;
+  margin-bottom: 5px;
+}
+
+.day-temperature {
+  margin-top: 5px;
+  font-weight: 400;
+}
+
+.day-temperature span {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.credit {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 14px;
+  color: #8fc9da;
+  width: 100%;
+}
+
+.credit a {
+  color: #f06789;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.credit a:hover {
+  color: #a94b7e;
+}
+
+/* Desktop view */
+@media screen and (min-width: 768px) {
+  .App {
+    margin-top: 50px;
+    margin-bottom: 100px; /* Increased margin for better spacing */
+  }
+
+  .credit {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 0;
+    width: auto;
+  }
+}
+
+/* Tablet view */
+@media screen and (max-width: 767px) {
+  .App {
+    width: 80%;
+    padding: 20px;
+    margin-bottom: 80px; /* Adjusted margin for better spacing */
+  }
+
+  .SearchEngine input {
+    width: 60%;
+  }
+
+  .SearchEngine button {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .temp {
+    font-size: 48px;
+  }
+
+  .temp-deg {
+    font-size: 24px;
+  }
+
+  .temp-icon {
+    width: 20%;
+  }
+
+  .weather-des {
+    font-size: 18px;
+  }
+
+  .weather-info {
+    font-size: 18px;
+  }
+
+  .col p {
+    margin-left: 5px;
+  }
+
+  .forecast-container {
+    margin-top: 20px;
+  }
+
+  .day {
+    flex: 2 2 calc(50% - 6px); /* Adjusted flex basis and margin */
+    padding: 3px;
+    margin: 3px;
+  }
+
+  .day-name {
+    font-size: 16px;
+    padding: 0;
+    margin: 0;
+  }
+
+  .day-icon {
+    width: 50px;
+    height: 50px;
+  }
+
+  .day-temperature {
+    font-size: 16px;
+  }
+
+  .credit {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 14px;
+    width: 100%;
+  }
+}
+
+/* Mobile view */
+@media screen and (max-width: 480px) {
+  .App {
+    width: 80%;
+    padding: 10px;
+    margin-bottom: 100px; /* Increased margin for better spacing */
+  }
+
+  .SearchEngine input {
+    width: 60%;
+  }
+
+  .SearchEngine button {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .temp {
+    font-size: 36px;
+  }
+
+  .temp-deg {
+    font-size: 18px;
+  }
+
+  .temp-icon {
+    width: 10%;
+  }
+
+  .weather-des {
+    font-size: 16px;
+  }
+
+  .weather-info {
+    font-size: 16px;
+  }
+
+  .forecast-container {
+    margin-top: 5px;
+  }
+
+  .day {
+    flex: 2 2 calc(50% - 6px); /* Adjusted flex basis and margin */
+    padding: 3px;
+    margin: 3px;
+  }
+
+  .day-name {
+    font-size: 16px;
+    padding: 0;
+    margin: 0;
+  }
+
+  .day-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .day-temperature {
+    font-size: 16px;
+  }
+
+  .credit {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 14px;
+    width: 100%;
+  }
+}
