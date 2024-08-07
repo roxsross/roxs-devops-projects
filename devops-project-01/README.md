@@ -21,10 +21,6 @@
 
 🔥🔥🔥🔥
 
-Aquí tienes la traducción al español:
-
----
-
 # Clon de Netflix
 
 Este proyecto es un clon estático del sitio web de Netflix. Proporciona a los usuarios una representación visual de las características y funcionalidades clave de la plataforma Netflix. Los usuarios pueden ver el diseño, el diseño y la estructura del contenido del sitio web de Netflix.

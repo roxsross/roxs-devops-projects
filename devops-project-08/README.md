@@ -21,7 +21,7 @@
 
 🔥🔥🔥🔥
 
-# AWS Containers Retail Sample
+# Containers Retail Sample
 
 Este es un ejemplo de aplicación diseñado para ilustrar varios conceptos relacionados con contenedores. Presenta una aplicación e-commerce que incluye un catálogo de productos, un carrito de compras y un proceso de pago.
 
