@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Mario Phaser</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.png">
+    <link rel="preload" href="assets/others/loading.gif" />
+    <link rel="stylesheet" href="assets/css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  </head>
+  <body>
+    <div id="game">
+      <img id="gif" src="assets/others/loading.gif" alt="Loading animation" class="loading-gif">
+      <img id="gif-shadow" src="assets/others/loading.gif" alt="Loading animation shadow" class="loading-gif">
+    </div>
+
+    <noscript>
+      <div class="blurbg">
+        <div class="alertpopup">
+          <h2>JavaScript disabled!</h2>
+          <hr>
+          <p>This website uses JavaScript to work, otherwise the game will not load.</p>
+          <p>Enable or stop blocking JavaScript and try again.</p>
+        </div>
+      </div>
+    </noscript>
+
+    <script src="./javascript/game.js" type="text/javascript"></script><script src="./javascript/game/animations.js" type="text/javascript"></script><script src="./javascript/game/blocks.js" type="text/javascript"></script><script src="./javascript/game/strucutres.js" type="text/javascript"></script><script src="./javascript/game/settings.js" type="text/javascript"></script><script src="./javascript/game/fireball.js" type="text/javascript"></script><script src="./javascript/game/player-control.js" type="text/javascript"></script><script src="./javascript/game/hud-control.js" type="text/javascript"></script><script src="./javascript/game/entities-control.js" type="text/javascript"></script><script src="./javascript/helpers/screenshot.js" type="text/javascript"></script><script src="./javascript/helpers/window-title.js" type="text/javascript"></script>
+  </body>
+</html>

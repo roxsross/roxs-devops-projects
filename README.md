@@ -32,6 +32,11 @@ El objetivo de esta colección es proporcionarte un conjunto de herramientas pr�
 
 A medida que exploras estos proyectos, recuerda que cada desafío es una oportunidad para aprender y crecer. La tecnología avanza rápidamente, y estar al tanto de las últimas herramientas y prácticas es fundamental para mantener una ventaja competitiva. Al involucrarte en estos proyectos open source, estás dando un paso significativo hacia la mejora continua y la excelencia en el campo de DevOps.
 
+## Proyecto 0: DevOps-Project-00
+Este proyecto incluye una aplicación web simple con HTML y CSS. Super Mario Phaser es una recreación del clásico juego Super Mario Bros utilizando el framework Phaser. Este proyecto tiene como objetivo brindar la experiencia nostálgica de jugar el icónico juego de plataformas en navegadores web modernos. 
+
+- **Tecnologías**: HTML, CSS
+- **Ubicación**: [devops-project-00](devops-project-00/)
 
 ## Proyecto 1: DevOps-Project-01
 Este proyecto incluye una aplicación web simple con HTML y CSS. Es ideal para aprender los conceptos básicos de la estructura de un proyecto web.
