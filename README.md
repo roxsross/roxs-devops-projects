@@ -32,6 +32,40 @@ El objetivo de esta colección es proporcionarte un conjunto de herramientas pr�
 
 A medida que exploras estos proyectos, recuerda que cada desafío es una oportunidad para aprender y crecer. La tecnología avanza rápidamente, y estar al tanto de las últimas herramientas y prácticas es fundamental para mantener una ventaja competitiva. Al involucrarte en estos proyectos open source, estás dando un paso significativo hacia la mejora continua y la excelencia en el campo de DevOps.
 
+## Cómo trabajar con los proyectos
+
+Todos los proyectos comparten la misma estructura: `Dockerfile` multi-stage con usuario sin privilegios, `docker-compose.yml` con healthchecks y límites de recursos, manifiestos en `k8s/` y un `.env.example` cuando hay secretos.
+
+```bash
+make help          # lista los targets disponibles
+make up-05         # levanta el proyecto 05 con docker compose
+make logs-05       # sigue sus logs
+make down-05       # lo baja y elimina volúmenes
+make lint-docker   # hadolint sobre todos los Dockerfile
+make scan-09       # escaneo de vulnerabilidades con Trivy
+```
+
+Antes de levantar un proyecto que traiga `.env.example`, copialo a `.env` y ajustá los valores:
+
+```bash
+cp devops-project-09/.env.example devops-project-09/.env
+```
+
+Para desplegar en Kubernetes:
+
+```bash
+kubectl apply -f devops-project-10/k8s/
+```
+
+### CI/CD
+
+| Workflow | Qué hace |
+| --- | --- |
+| `.github/workflows/ci.yml` | Tests por stack (Node, Python, Java, Go, .NET) solo en los proyectos que cambiaron, más validación de compose y manifiestos k8s |
+| `.github/workflows/docker.yml` | Build, lint, escaneo Trivy, SBOM y publicación en GHCR de cada imagen |
+| `.github/workflows/security.yml` | Trivy config/IaC, escaneo de secretos y CodeQL |
+| `.github/dependabot.yml` | Actualizaciones semanales de npm, pip, maven, gomod, nuget, docker y actions |
+
 ## Proyecto 0: DevOps-Project-00
 Este proyecto incluye una aplicación web simple con HTML y CSS. Super Mario Phaser es una recreación del clásico juego Super Mario Bros utilizando el framework Phaser. Este proyecto tiene como objetivo brindar la experiencia nostálgica de jugar el icónico juego de plataformas en navegadores web modernos. 
 
