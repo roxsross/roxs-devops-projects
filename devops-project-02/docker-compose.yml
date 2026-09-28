@@ -6,7 +6,8 @@ services:
     image: devops-project-02:local
     container_name: django-hello-world
     env_file:
-      - .env
+      - path: .env
+        required: false
     ports:
       - "8002:8000"
     volumes:

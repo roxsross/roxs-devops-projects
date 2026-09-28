@@ -15,6 +15,7 @@ updates:
       - /devops-project-03/shopping-cart
       - /devops-project-05/result
       - /devops-project-06
+      - /devops-project-08/src/checkout
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
@@ -33,14 +34,20 @@ updates:
 
   # --- Java ---
   - package-ecosystem: maven
-    directory: /devops-project-04
+    directories:
+      - /devops-project-04
+      - /devops-project-08/src/ui
+      - /devops-project-08/src/cart
+      - /devops-project-08/src/orders
     schedule:
       interval: weekly
     labels: [dependencies, java]
 
   # --- Go ---
   - package-ecosystem: gomod
-    directory: /devops-project-10
+    directories:
+      - /devops-project-08/src/catalog
+      - /devops-project-10
     schedule:
       interval: weekly
     labels: [dependencies, go]
@@ -58,9 +65,22 @@ updates:
       - /devops-project-00
       - /devops-project-01
       - /devops-project-02
+      - /devops-project-03/frontend
+      - /devops-project-03/products
+      - /devops-project-03/merchandise
+      - /devops-project-03/shopping-cart
       - /devops-project-04
+      - /devops-project-05/vote
+      - /devops-project-05/result
+      - /devops-project-05/worker
       - /devops-project-06
       - /devops-project-07
+      - /devops-project-08/src/ui
+      - /devops-project-08/src/cart
+      - /devops-project-08/src/orders
+      - /devops-project-08/src/catalog
+      - /devops-project-08/src/checkout
+      - /devops-project-08/src/assets
       - /devops-project-09
       - /devops-project-10
     schedule:

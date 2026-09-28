@@ -1,0 +1,129 @@
+name: Docker images
+
+on:
+  push:
+    branches: [main, master]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: docker-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+
+jobs:
+  project-00:
+    uses: ./.github/workflows/_reusable-docker.yml
+    with:
+      project: devops-project-00
+      context: ./devops-project-00
+      dockerfile: ./devops-project-00/Dockerfile
+      image-name: devops-project-00
+      push: ${{ github.event_name != 'pull_request' }}
+
+  project-01:
+    uses: ./.github/workflows/_reusable-docker.yml
+    with:
+      project: devops-project-01
+      context: ./devops-project-01
+      dockerfile: ./devops-project-01/Dockerfile
+      image-name: devops-project-01
+      push: ${{ github.event_name != 'pull_request' }}
+
+  project-02:
+    uses: ./.github/workflows/_reusable-docker.yml
+    with:
+      project: devops-project-02
+      context: ./devops-project-02
+      dockerfile: ./devops-project-02/Dockerfile
+      image-name: devops-project-02
+      push: ${{ github.event_name != 'pull_request' }}
+
+  project-03:
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [frontend, products, merchandise, shopping-cart]
+    uses: ./.github/workflows/_reusable-docker.yml
+    with:
+      project: devops-project-03
+      context: ./devops-project-03/${{ matrix.service }}
+      dockerfile: ./devops-project-03/${{ matrix.service }}/Dockerfile
+      image-name: devops-project-03-${{ matrix.service }}
+      push: ${{ github.event_name != 'pull_request' }}
+
+  project-04:
+    uses: ./.github/workflows/_reusable-docker.yml
+    with:
+      project: devops-project-04
+      context: ./devops-project-04
+      dockerfile: ./devops-project-04/Dockerfile.multi
+      image-name: devops-project-04
+      push: ${{ github.event_name != 'pull_request' }}
+
+  project-05:
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [vote, result, worker]
+    uses: ./.github/workflows/_reusable-docker.yml
+    with:
+      project: devops-project-05
+      context: ./devops-project-05/${{ matrix.service }}
+      dockerfile: ./devops-project-05/${{ matrix.service }}/Dockerfile
+      image-name: devops-project-05-${{ matrix.service }}
+      push: ${{ github.event_name != 'pull_request' }}
+
+  project-06:
+    uses: ./.github/workflows/_reusable-docker.yml
+    with:
+      project: devops-project-06
+      context: ./devops-project-06
+      dockerfile: ./devops-project-06/Dockerfile
+      image-name: devops-project-06
+      push: ${{ github.event_name != 'pull_request' }}
+
+  project-07:
+    uses: ./.github/workflows/_reusable-docker.yml
+    with:
+      project: devops-project-07
+      context: ./devops-project-07
+      dockerfile: ./devops-project-07/Dockerfile
+      image-name: devops-project-07
+      push: ${{ github.event_name != 'pull_request' }}
+
+  project-08:
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [ui, cart, orders, catalog, checkout, assets]
+    uses: ./.github/workflows/_reusable-docker.yml
+    with:
+      project: devops-project-08
+      context: ./devops-project-08/src/${{ matrix.service }}
+      dockerfile: ./devops-project-08/src/${{ matrix.service }}/Dockerfile
+      image-name: retail-${{ matrix.service }}
+      push: ${{ github.event_name != 'pull_request' }}
+
+  project-09:
+    uses: ./.github/workflows/_reusable-docker.yml
+    with:
+      project: devops-project-09
+      context: ./devops-project-09
+      dockerfile: ./devops-project-09/Dockerfile
+      image-name: devops-project-09
+      push: ${{ github.event_name != 'pull_request' }}
+
+  project-10:
+    uses: ./.github/workflows/_reusable-docker.yml
+    with:
+      project: devops-project-10
+      context: ./devops-project-10
+      dockerfile: ./devops-project-10/Dockerfile
+      image-name: devops-project-10
+      push: ${{ github.event_name != 'pull_request' }}

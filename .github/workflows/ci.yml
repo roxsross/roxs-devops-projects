@@ -1,0 +1,203 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, new-version]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: detectar cambios
+    runs-on: ubuntu-latest
+    outputs:
+      p00: ${{ steps.filter.outputs.p00 }}
+      p01: ${{ steps.filter.outputs.p01 }}
+      p02: ${{ steps.filter.outputs.p02 }}
+      p03: ${{ steps.filter.outputs.p03 }}
+      p04: ${{ steps.filter.outputs.p04 }}
+      p05: ${{ steps.filter.outputs.p05 }}
+      p06: ${{ steps.filter.outputs.p06 }}
+      p07: ${{ steps.filter.outputs.p07 }}
+      p08: ${{ steps.filter.outputs.p08 }}
+      p09: ${{ steps.filter.outputs.p09 }}
+      p10: ${{ steps.filter.outputs.p10 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            p00: ['devops-project-00/**']
+            p01: ['devops-project-01/**']
+            p02: ['devops-project-02/**']
+            p03: ['devops-project-03/**']
+            p04: ['devops-project-04/**']
+            p05: ['devops-project-05/**']
+            p06: ['devops-project-06/**']
+            p07: ['devops-project-07/**']
+            p08: ['devops-project-08/**']
+            p09: ['devops-project-09/**']
+            p10: ['devops-project-10/**']
+
+  node-tests:
+    name: tests Node (${{ matrix.service }})
+    needs: changes
+    if: needs.changes.outputs.p03 == 'true' || needs.changes.outputs.p05 == 'true' || needs.changes.outputs.p06 == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { service: project-03-frontend, path: devops-project-03/frontend }
+          - { service: project-03-products, path: devops-project-03/products }
+          - { service: project-03-merchandise, path: devops-project-03/merchandise }
+          - { service: project-03-shopping-cart, path: devops-project-03/shopping-cart }
+          - { service: project-05-result, path: devops-project-05/result }
+          - { service: project-06, path: devops-project-06 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ${{ matrix.path }}/package-lock.json
+      - run: npm ci
+        working-directory: ${{ matrix.path }}
+      - name: Auditoría de dependencias
+        run: npm audit --audit-level=high || true
+        working-directory: ${{ matrix.path }}
+      - name: Tests
+        run: npm test --if-present -- --watchAll=false --passWithNoTests
+        working-directory: ${{ matrix.path }}
+        env:
+          CI: "true"
+
+  python-tests:
+    name: tests Python (${{ matrix.service }})
+    needs: changes
+    if: needs.changes.outputs.p02 == 'true' || needs.changes.outputs.p05 == 'true' || needs.changes.outputs.p07 == 'true' || needs.changes.outputs.p09 == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { service: project-02-django, path: devops-project-02, requirements: requirements.txt }
+          - { service: project-05-vote, path: devops-project-05/vote, requirements: requirements.txt }
+          - { service: project-07-tetris, path: devops-project-07, requirements: requirements.txt }
+          - { service: project-09-webservice, path: devops-project-09, requirements: requirements-dev.txt }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Instalar dependencias
+        run: pip install -r ${{ matrix.requirements }}
+        working-directory: ${{ matrix.path }}
+      - name: Tests
+        run: |
+          if [ -d tests ]; then
+            pip install pytest
+            python -m pytest tests -q
+          else
+            python -m compileall -q .
+          fi
+        working-directory: ${{ matrix.path }}
+
+  java-tests:
+    name: tests Java (${{ matrix.service }})
+    needs: changes
+    if: needs.changes.outputs.p04 == 'true' || needs.changes.outputs.p08 == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { service: project-04-petclinic, path: devops-project-04 }
+          - { service: project-08-ui, path: devops-project-08/src/ui }
+          - { service: project-08-cart, path: devops-project-08/src/cart }
+          - { service: project-08-orders, path: devops-project-08/src/orders }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+      - name: Build
+        run: ./mvnw -B -ntp verify
+        working-directory: ${{ matrix.path }}
+
+  go-tests:
+    name: tests Go (${{ matrix.service }})
+    needs: changes
+    if: needs.changes.outputs.p08 == 'true' || needs.changes.outputs.p10 == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { service: project-08-catalog, path: devops-project-08/src/catalog }
+          - { service: project-10, path: devops-project-10 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          cache-dependency-path: ${{ matrix.path }}/go.sum
+      - run: go vet ./...
+        working-directory: ${{ matrix.path }}
+      - run: go test -race ./...
+        working-directory: ${{ matrix.path }}
+
+  dotnet-tests:
+    name: build .NET (project-05 worker)
+    needs: changes
+    if: needs.changes.outputs.p05 == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - run: dotnet build -c Release
+        working-directory: devops-project-05/worker
+
+  k8s-validate:
+    name: validar manifiestos k8s
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar kubeconform
+        run: |
+          curl -sSLo kubeconform.tar.gz \
+            https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz
+          tar xf kubeconform.tar.gz kubeconform
+          sudo mv kubeconform /usr/local/bin/
+      - name: Validar
+        run: |
+          kubeconform -strict -summary -ignore-missing-schemas \
+            -schema-location default \
+            $(find . -path ./node_modules -prune -o -path '*/k8s/*.yaml' -print)
+
+  compose-validate:
+    name: validar docker compose
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar todos los compose
+        run: |
+          fail=0
+          for f in $(find . -maxdepth 2 \( -name 'docker-compose.yml' -o -name 'compose.yml' \)); do
+            echo "==> $f"
+            docker compose -f "$f" config -q || fail=1
+          done
+          exit $fail
