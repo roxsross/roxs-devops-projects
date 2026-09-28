@@ -1,0 +1,10 @@
+.git
+.github
+.gitignore
+README.md
+Dockerfile
+.dockerignore
+docker-compose*.yml
+k8s/
+**/*.md
+.DS_Store

@@ -1,0 +1,28 @@
+services:
+  netflix:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: devops-project-01:local
+    container_name: netflix-clone
+    ports:
+      - "8001:8080"
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+      - /var/run
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 128M

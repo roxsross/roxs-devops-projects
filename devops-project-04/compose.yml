@@ -1,3 +1,4 @@
+name: petclinic
 
 services:
   petclinic:
@@ -5,30 +6,45 @@ services:
       context: .
       dockerfile: Dockerfile.multi
       target: development
+    image: devops-project-04:dev
     ports:
-      - 8000:8000
-      - 8080:8080
+      - "8080:8080"
+      - "8000:8000"
     environment:
-      - SERVER_PORT=8080
-      - MYSQL_URL=jdbc:mysql://mysqlserver/petclinic
+      SERVER_PORT: 8080
+      MYSQL_URL: jdbc:mysql://mysqlserver/petclinic
+      MYSQL_USER: ${MYSQL_USER:-petclinic}
+      MYSQL_PASS: ${MYSQL_PASSWORD:-petclinic}
     volumes:
       - ./:/app
     depends_on:
-      - mysqlserver
-    
+      mysqlserver:
+        condition: service_healthy
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+
   mysqlserver:
-    image: mysql:8
-    ports:
-      - 3306:3306
+    image: mysql:8.4
+    # Sin contraseña root vacía: se exige una explícita vía entorno.
     environment:
-      - MYSQL_ROOT_PASSWORD=
-      - MYSQL_ALLOW_EMPTY_PASSWORD=true
-      - MYSQL_USER=petclinic
-      - MYSQL_PASSWORD=petclinic
-      - MYSQL_DATABASE=petclinic
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpw-change-me}
+      MYSQL_USER: ${MYSQL_USER:-petclinic}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-petclinic}
+      MYSQL_DATABASE: petclinic
+    expose:
+      - "3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - mysql_config:/etc/mysql/conf.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+
 volumes:
   mysql_data:
   mysql_config:

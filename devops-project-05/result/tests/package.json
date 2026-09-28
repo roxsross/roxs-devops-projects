@@ -1,0 +1,9 @@
+{
+  "name": "result-e2e-tests",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Smoke test end-to-end de la Voting App",
+  "dependencies": {
+    "playwright": "1.49.1"
+  }
+}

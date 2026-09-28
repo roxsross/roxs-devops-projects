@@ -1,6 +1,11 @@
 let express = require('express');
 let app = express();
 
+const PORT = process.env.PORT || 3003;
+
+app.get('/health', function (req, res) {
+    res.json({ status: 'ok', service: 'merchandise' });
+});
 
 app.get('/', function (req, res) {
     res.json({ 
@@ -18,7 +23,12 @@ app.get('/', function (req, res) {
     res.end();
 });
 
-app.listen(3003, function () {
-  console.log("app listening on port 3003!");
+const server = app.listen(PORT, function () {
+  console.log(`merchandise listening on port ${PORT}!`);
 });
+
+// Apagado ordenado: Kubernetes envía SIGTERM antes de matar el pod.
+for (const signal of ['SIGTERM', 'SIGINT']) {
+  process.on(signal, () => server.close(() => process.exit(0)));
+}
 

@@ -1,0 +1,16 @@
+.git
+.github
+.gitignore
+target/
+build/
+.gradle/
+k8s/
+docs/
+*.md
+!readme.md
+.DS_Store
+.idea/
+Dockerfile*
+.dockerignore
+compose.yml
+docker-compose*.yml

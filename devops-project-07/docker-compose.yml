@@ -1,0 +1,33 @@
+services:
+  tetris:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: devops-project-07:local
+    container_name: tetris
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-insecure-dev-key-change-me}
+      DB_FILENAME: /app/data/tetris.db
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-*}
+    ports:
+      - "8007:8080"
+    volumes:
+      - tetris_data:/app/data
+    restart: unless-stopped
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+
+volumes:
+  tetris_data:

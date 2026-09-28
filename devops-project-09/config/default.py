@@ -1,12 +1,28 @@
-# *** VARIABLES *** #
+# *** VARIABLES DE CONFIGURACIÓN ***
+# Todos los valores se leen del entorno para no versionar secretos.
 
-# Host
-HOST = "0.0.0.0"
+import os
 
-# Puerto
-PORT = 8080 #Puerto por defecto
+# Host y puerto de escucha
+HOST = os.getenv("HOST", "0.0.0.0")
+PORT = int(os.getenv("PORT", "8080"))
 
-# Configuración Base de Datos
-SECRET_KEY = '26e6f5689c2c07c42e85e725dcda798088cf673d3141bd17dfe3ef688457c351'
-SQLALCHEMY_DATABASE_URI = 'sqlite:///data/devops.db'
-SQLALCHEMY_TRACK_MODIFICATIONS = True
+# Clave de firma de los JWT. En producción es obligatorio definir SECRET_KEY.
+SECRET_KEY = os.getenv("SECRET_KEY", "dev-only-insecure-secret-change-me")
+
+# Base de datos
+SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///data/devops.db")
+SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+# Cache Redis
+REDIS_HOST = os.getenv("REDIS_HOST", "redis")
+REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
+
+# Directorio de logs
+LOG_DIR = os.getenv("LOG_DIR", os.path.join(os.getcwd(), "logs"))
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+# Escribir logs en fichero además de stdout (desactivado en contenedores).
+LOG_TO_FILE = os.getenv("LOG_TO_FILE", "false").lower() in ("1", "true", "yes")
+
+# Vigencia del token JWT en minutos
+TOKEN_EXPIRATION_MINUTES = int(os.getenv("TOKEN_EXPIRATION_MINUTES", "60"))

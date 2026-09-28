@@ -1,12 +1,16 @@
-FROM node:8.9-slim
+# syntax=docker/dockerfile:1
+# Imagen de tests E2E: Playwright + Chromium (sustituye a PhantomJS, sin soporte desde 2018).
 
-RUN apt-get update -qq && apt-get install -qy \ 
-    ca-certificates \
-    bzip2 \
-    curl \
-    libfontconfig \
-    --no-install-recommends
-RUN yarn global add phantomjs-prebuilt
-ADD . /app
+FROM mcr.microsoft.com/playwright:v1.49.1-noble
+
 WORKDIR /app
-CMD ["/app/tests.sh"]
+
+COPY package.json ./
+RUN npm install --omit=dev --no-audit --no-fund
+
+COPY . .
+RUN chmod +x tests.sh
+
+USER pwuser
+
+CMD ["./tests.sh"]

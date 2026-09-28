@@ -1,0 +1,68 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    labels: [dependencies, ci]
+
+  # --- Node ---
+  - package-ecosystem: npm
+    directories:
+      - /devops-project-03/frontend
+      - /devops-project-03/products
+      - /devops-project-03/merchandise
+      - /devops-project-03/shopping-cart
+      - /devops-project-05/result
+      - /devops-project-06
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels: [dependencies, node]
+
+  # --- Python ---
+  - package-ecosystem: pip
+    directories:
+      - /devops-project-02
+      - /devops-project-05/vote
+      - /devops-project-07
+      - /devops-project-09
+    schedule:
+      interval: weekly
+    labels: [dependencies, python]
+
+  # --- Java ---
+  - package-ecosystem: maven
+    directory: /devops-project-04
+    schedule:
+      interval: weekly
+    labels: [dependencies, java]
+
+  # --- Go ---
+  - package-ecosystem: gomod
+    directory: /devops-project-10
+    schedule:
+      interval: weekly
+    labels: [dependencies, go]
+
+  # --- .NET ---
+  - package-ecosystem: nuget
+    directory: /devops-project-05/worker
+    schedule:
+      interval: weekly
+    labels: [dependencies, dotnet]
+
+  # --- Docker ---
+  - package-ecosystem: docker
+    directories:
+      - /devops-project-00
+      - /devops-project-01
+      - /devops-project-02
+      - /devops-project-04
+      - /devops-project-06
+      - /devops-project-07
+      - /devops-project-09
+      - /devops-project-10
+    schedule:
+      interval: weekly
+    labels: [dependencies, docker]

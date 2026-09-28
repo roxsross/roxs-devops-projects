@@ -1,15 +1,20 @@
-var system = require('system');
-var page = require('webpage').create();
-var url = system.args[1];
+// Renderiza una página con Chromium headless e imprime el HTML resultante.
+// Reemplaza a PhantomJS, sin mantenimiento desde 2018.
+const { chromium } = require('playwright');
 
-page.onLoadFinished = function() {
-  setTimeout(function(){
-    console.log(page.content);
-    phantom.exit();
-  }, 1000);
-};
+const url = process.argv[2];
 
-page.open(url, function() {
-    page.evaluate(function() {
-  });
+(async () => {
+  const browser = await chromium.launch({ args: ['--no-sandbox'] });
+  try {
+    const page = await browser.newPage();
+    await page.goto(url, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(1000);
+    console.log(await page.content());
+  } finally {
+    await browser.close();
+  }
+})().catch((err) => {
+  console.error(err);
+  process.exit(1);
 });

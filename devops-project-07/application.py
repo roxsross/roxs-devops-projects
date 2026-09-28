@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO
 
@@ -5,8 +7,14 @@ from master import Master
 
 # Initialize the flask app.
 app = Flask(__name__)
-socketio = SocketIO(app)
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'insecure-dev-key-change-me')
+socketio = SocketIO(app, cors_allowed_origins=os.getenv('CORS_ALLOWED_ORIGINS', '*'))
 master = Master()
+
+# Health check para Docker/Kubernetes.
+@app.route('/healthz', methods=['GET'])
+def healthz():
+	return {'status': 'ok'}
 
 # Serve the index page.
 @app.route('/', methods=['GET'])
@@ -102,5 +110,5 @@ def submit(data):
 
 # Run the app with web sockets capabilities.
 if __name__ == '__main__':
-	app.debug = True
-	socketio.run(app, host='0.0.0.0', port=8080)
+	app.debug = os.getenv('FLASK_DEBUG', 'false').lower() in ('1', 'true', 'yes')
+	socketio.run(app, host='0.0.0.0', port=int(os.getenv('PORT', '8080')), allow_unsafe_werkzeug=app.debug)

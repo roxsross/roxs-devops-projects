@@ -9,4 +9,3 @@ def test_health_ok():
     with create_app().test_client() as test_client:
         response = test_client.get('/health')
         assert response.status_code == 200
-    return 0

@@ -1,47 +1,35 @@
-# Build Stage
-FROM public.ecr.aws/amazonlinux/amazonlinux:2023 as build-env
-RUN dnf --setopt=install_weak_deps=False install -q -y \
-    git \
-    golang \
-    && \
-    dnf clean all
+# syntax=docker/dockerfile:1
 
-ENV MAIN_PATH=main.go
+FROM golang:1.23-alpine AS build
 
-RUN mkdir -p "${GOPATH}/src" "${GOPATH}/bin" /appsrc
+WORKDIR /src
 
-WORKDIR /appsrc
+COPY go.mod go.sum ./
+RUN go mod download
 
 COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/catalog main.go
 
-ENV GOPROXY=direct
-RUN go build -o main $MAIN_PATH
+FROM alpine:3.21 AS runtime
 
-# Final stage
-FROM public.ecr.aws/amazonlinux/amazonlinux:2023
-
-ENV APPUSER=appuser
-ENV APPUID=1000
-ENV APPGID=1000
-
-RUN dnf --setopt=install_weak_deps=False install -q -y \
-    shadow-utils \
-    && \
-    dnf clean all
-
-RUN useradd \
-    --home "/app" \
-    --create-home \
-    --user-group \
-    --uid "$APPUID" \
-    "$APPUSER"
-
-WORKDIR /app
-USER appuser
-
-COPY --chown=appuser:appuser --from=build-env /appsrc/main /app/
-COPY --chown=appuser:appuser db/ /app/db/
+LABEL org.opencontainers.image.title="retail-store-catalog" \
+      org.opencontainers.image.description="Servicio de catálogo (Go + Gin + MariaDB)" \
+      org.opencontainers.image.source="https://github.com/roxsross/roxs-devops-projects"
 
 ENV GIN_MODE=release
 
-ENTRYPOINT ["/app/main"]
+RUN apk add --no-cache ca-certificates curl tini \
+    && addgroup -S -g 1000 appuser \
+    && adduser -S -u 1000 -G appuser -h /app appuser
+
+WORKDIR /app
+COPY --from=build --chown=appuser:appuser /out/catalog /app/catalog
+COPY --chown=appuser:appuser db/ /app/db/
+
+USER appuser
+EXPOSE 8080
+
+HEALTHCHECK --interval=15s --timeout=3s --start-period=10s --retries=5 \
+    CMD curl -fsS http://127.0.0.1:8080/health || exit 1
+
+ENTRYPOINT ["/sbin/tini", "--", "/app/catalog"]

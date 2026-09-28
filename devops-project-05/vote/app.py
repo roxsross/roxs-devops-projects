@@ -8,6 +8,8 @@ import logging
 
 option_a = os.getenv('OPTION_A', "Cats")
 option_b = os.getenv('OPTION_B', "Dogs")
+redis_host = os.getenv('REDIS_HOST', 'redis')
+redis_port = int(os.getenv('REDIS_PORT', '6379'))
 hostname = socket.gethostname()
 
 app = Flask(__name__)
@@ -18,8 +20,21 @@ app.logger.setLevel(logging.INFO)
 
 def get_redis():
     if not hasattr(g, 'redis'):
-        g.redis = Redis(host="redis", db=0, socket_timeout=5)
+        g.redis = Redis(host=redis_host, port=redis_port, db=0, socket_timeout=5)
     return g.redis
+
+@app.route("/healthz", methods=['GET'])
+def healthz():
+    return {"status": "ok"}
+
+@app.route("/readyz", methods=['GET'])
+def readyz():
+    try:
+        get_redis().ping()
+    except Exception as exc:  # la readiness debe fallar si Redis no responde
+        app.logger.warning('Redis no disponible: %s', exc)
+        return {"status": "unavailable"}, 503
+    return {"status": "ok"}
 
 @app.route("/", methods=['POST','GET'])
 def hello():
@@ -48,4 +63,5 @@ def hello():
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=80, debug=True, threaded=True)
+    # Solo para desarrollo local; en contenedor se usa gunicorn.
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', '8080')), debug=False, threaded=True)

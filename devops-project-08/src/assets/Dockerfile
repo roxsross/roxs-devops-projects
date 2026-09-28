@@ -1,19 +1,22 @@
-FROM public.ecr.aws/amazonlinux/amazonlinux:2023
-RUN dnf --setopt=install_weak_deps=False -y install nginx
+# syntax=docker/dockerfile:1
 
-EXPOSE 8080
+FROM nginxinc/nginx-unprivileged:1.27-alpine AS runtime
 
+LABEL org.opencontainers.image.title="retail-store-assets" \
+      org.opencontainers.image.description="Servidor de assets estáticos (Nginx)" \
+      org.opencontainers.image.source="https://github.com/roxsross/roxs-devops-projects"
+
+USER root
 COPY default.conf /etc/nginx/nginx.conf
 COPY mime.types /etc/nginx/mime.types
 COPY public/ /usr/share/nginx/html
+RUN chown -R 101:101 /usr/share/nginx/html
 
-RUN chown -R nginx:nginx /var/log/nginx && \
-        chown -R nginx:nginx /etc/nginx/conf.d && \
-        chown -R nginx:nginx /usr/share/nginx/html
-RUN touch /var/run/nginx.pid && \
-        chown -R nginx:nginx /var/run/nginx.pid
+USER 101
+EXPOSE 8080
 
-USER nginx
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget -qO- http://127.0.0.1:8080/health >/dev/null 2>&1 || exit 1
 
 STOPSIGNAL SIGQUIT
 

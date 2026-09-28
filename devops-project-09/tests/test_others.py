@@ -19,7 +19,7 @@ def test_default_parameters():
     assert port == PORT
 
 
-@mock.patch('argparse.ArgumentParser.parse_args', return_value=argparse.Namespace(port=23456))
+@mock.patch('argparse.ArgumentParser.parse_known_args', return_value=(argparse.Namespace(port=23456), []))
 def test_parameters(mock_args):
     port = main()
     assert port == 23456

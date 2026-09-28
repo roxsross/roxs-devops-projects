@@ -3,7 +3,7 @@ from sqlite3 import Error, connect
 
 class Database:
 	def __init__(self):
-		self.filename = os.environ['DB_FILENAME']
+		self.filename = os.environ.get('DB_FILENAME', 'tetris.db')
 
 	# Initializes the database.
 	def initialize(self):

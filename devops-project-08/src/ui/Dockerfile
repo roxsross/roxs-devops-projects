@@ -1,60 +1,43 @@
-# Build Stage
-FROM public.ecr.aws/amazonlinux/amazonlinux:2023 as build-env
-RUN dnf --setopt=install_weak_deps=False install -q -y \
-    maven \
-    java-17-amazon-corretto-headless \
-    which \
-    && \
-    dnf clean all
+# syntax=docker/dockerfile:1
 
-ENV JAR_PATH=target/ui-0.0.1-SNAPSHOT.jar
+FROM eclipse-temurin:17-jdk-alpine AS build
 
-VOLUME /tmp
-WORKDIR /
+WORKDIR /workspace
 
 COPY .mvn .mvn
-COPY mvnw .
-COPY pom.xml .
+COPY mvnw pom.xml ./
+RUN ./mvnw -B -q dependency:go-offline
 
-RUN ./mvnw dependency:go-offline -B -q
+COPY src src
+RUN ./mvnw -B -q -DskipTests package \
+    && cp target/ui-0.0.1-SNAPSHOT.jar /app.jar
 
-COPY ./src ./src
+FROM eclipse-temurin:17-jre-alpine AS runtime
 
-RUN ./mvnw -DskipTests package -q && \
-    mv /$JAR_PATH /app.jar
+LABEL org.opencontainers.image.title="retail-store-ui" \
+      org.opencontainers.image.description="Frontend Spring Boot del retail store" \
+      org.opencontainers.image.source="https://github.com/roxsross/roxs-devops-projects"
 
-# Package Stage
-FROM public.ecr.aws/amazonlinux/amazonlinux:2023
+ARG AWS_OTEL_AGENT_VERSION=1.32.5
 
-RUN dnf --setopt=install_weak_deps=False install -q -y \
-    java-17-amazon-corretto-headless \
-    shadow-utils \
-    && \
-    dnf clean all
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0" \
+    JAVA_TOOL_OPTIONS=-javaagent:/opt/aws-opentelemetry-agent.jar \
+    OTEL_JAVAAGENT_ENABLED=false
 
-ARG aws_opentelemetry_agent_version=1.24.0
-
-ENV APPUSER=appuser
-ENV APPUID=1000
-ENV APPGID=1000
-
-RUN useradd \
-    --home "/app" \
-    --create-home \
-    --user-group \
-    --uid "$APPUID" \
-    "$APPUSER"
-
-RUN curl -L https://github.com/aws-observability/aws-otel-java-instrumentation/releases/download/v${aws_opentelemetry_agent_version}/aws-opentelemetry-agent.jar -o /opt/aws-opentelemetry-agent.jar && \
-    curl -L https://raw.githubusercontent.com/aws-observability/aws-otel-java-instrumentation/v${aws_opentelemetry_agent_version}/licenses/licenses.md -o aws-opentelemetry-agent-licenses.md
-ENV JAVA_TOOL_OPTIONS=-javaagent:/opt/aws-opentelemetry-agent.jar
-ENV OTEL_JAVAAGENT_ENABLED=false
+RUN apk add --no-cache curl tini \
+    && addgroup -S -g 1000 appuser \
+    && adduser -S -u 1000 -G appuser -h /app appuser \
+    && curl -fsSL "https://github.com/aws-observability/aws-otel-java-instrumentation/releases/download/v${AWS_OTEL_AGENT_VERSION}/aws-opentelemetry-agent.jar" \
+       -o /opt/aws-opentelemetry-agent.jar \
+    && chmod 0444 /opt/aws-opentelemetry-agent.jar
 
 WORKDIR /app
+COPY --from=build --chown=appuser:appuser /app.jar ./app.jar
+
 USER appuser
-
-COPY --chown=appuser:appuser --from=build-env /app.jar .
-
 EXPOSE 8080
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+    CMD curl -fsS http://127.0.0.1:8080/actuator/health || exit 1
+
+ENTRYPOINT ["/sbin/tini", "--", "sh", "-c", "exec java $JAVA_OPTS -jar /app/app.jar"]

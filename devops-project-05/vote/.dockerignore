@@ -1,0 +1,11 @@
+.git
+.github
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.venv/
+venv/
+Dockerfile
+.dockerignore
+*.md
+.DS_Store

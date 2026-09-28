@@ -8,9 +8,9 @@ from server import db
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    public_id = db.Column(db.Integer, unique=True)
-    name = db.Column(db.String(50))
-    password = db.Column(db.String(50))
+    public_id = db.Column(db.String(36), unique=True)
+    name = db.Column(db.String(50), unique=True)
+    password = db.Column(db.String(255))
     cadenas_ingresadas = db.relationship('Cadena', back_populates='ingresada_por')
     tokens_expirados = db.relationship('InvalidToken', back_populates='pertenece_a')
 

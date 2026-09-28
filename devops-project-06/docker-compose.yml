@@ -1,0 +1,31 @@
+services:
+  weather:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_WEATHER_API_KEY: ${REACT_APP_WEATHER_API_KEY:-}
+        REACT_APP_DEFAULT_CITY: ${REACT_APP_DEFAULT_CITY:-Resistencia}
+    image: devops-project-06:local
+    container_name: react-weather-app
+    ports:
+      - "8006:8080"
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+      - /var/run
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 128M

@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: merchandise
+  labels:
+    app.kubernetes.io/name: merchandise
+    app.kubernetes.io/part-of: devops-project-03
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: merchandise
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: merchandise
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: merchandise
+          image: ghcr.io/roxsross/roxs-devops-projects/devops-project-03-merchandise:latest
+          ports:
+            - name: http
+              containerPort: 3003
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          livenessProbe:
+            httpGet: { path: /health, port: http }
+            initialDelaySeconds: 5
+            periodSeconds: 20
+          readinessProbe:
+            httpGet: { path: /health, port: http }
+            initialDelaySeconds: 3
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: merchandise
+spec:
+  selector:
+    app.kubernetes.io/name: merchandise
+  ports:
+    - name: http
+      port: 3003
+      targetPort: http

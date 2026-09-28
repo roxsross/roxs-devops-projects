@@ -1,0 +1,117 @@
+name: reusable-docker
+
+on:
+  workflow_call:
+    inputs:
+      project:
+        description: Carpeta del proyecto (ej. devops-project-02)
+        required: true
+        type: string
+      context:
+        description: Contexto de build de Docker
+        required: true
+        type: string
+      dockerfile:
+        description: Ruta al Dockerfile
+        required: true
+        type: string
+      image-name:
+        description: Nombre de la imagen (sin registry)
+        required: true
+        type: string
+      push:
+        description: Publicar la imagen en GHCR
+        required: false
+        default: false
+        type: boolean
+      platforms:
+        required: false
+        default: linux/amd64
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build:
+    name: build & scan (${{ inputs.image-name }})
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: ${{ inputs.dockerfile }}
+          failure-threshold: error
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Login en GHCR
+        if: inputs.push
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ inputs.image-name }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=sha,format=short
+
+      - name: Build (carga local para escanear)
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ inputs.context }}
+          file: ${{ inputs.dockerfile }}
+          load: true
+          tags: ${{ inputs.image-name }}:ci
+          cache-from: type=gha,scope=${{ inputs.image-name }}
+          cache-to: type=gha,mode=max,scope=${{ inputs.image-name }}
+
+      - name: Escaneo de vulnerabilidades (Trivy)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ inputs.image-name }}:ci
+          format: sarif
+          output: trivy-${{ inputs.image-name }}.sarif
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+
+      - name: Publicar resultados en Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-${{ inputs.image-name }}.sarif
+          category: trivy-${{ inputs.image-name }}
+
+      - name: Generar SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ inputs.image-name }}:ci
+          format: cyclonedx-json
+          artifact-name: sbom-${{ inputs.image-name }}.cyclonedx.json
+
+      - name: Push a GHCR
+        if: inputs.push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ inputs.context }}
+          file: ${{ inputs.dockerfile }}
+          push: true
+          platforms: ${{ inputs.platforms }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ inputs.image-name }}

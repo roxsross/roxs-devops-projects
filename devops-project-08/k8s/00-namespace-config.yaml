@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: retail-store
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: retail-secrets
+  namespace: retail-store
+type: Opaque
+stringData:
+  CATALOG_DB_PASSWORD: change-me
+  CATALOG_DB_ROOT_PASSWORD: change-me-root
+  ORDERS_DB_PASSWORD: change-me
+  ORDERS_DB_ROOT_PASSWORD: change-me-root
+  RABBITMQ_PASSWORD: change-me
+  AWS_ACCESS_KEY_ID: dummy
+  AWS_SECRET_ACCESS_KEY: dummy
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: retail-config
+  namespace: retail-store
+data:
+  CATALOG_DB_NAME: sampledb
+  CATALOG_DB_USER: catalog_user
+  ORDERS_DB_NAME: orders
+  ORDERS_DB_USER: orders_user
+  RABBITMQ_USER: guest
+  AWS_REGION: us-east-1

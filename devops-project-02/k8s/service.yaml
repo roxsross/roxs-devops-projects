@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: django-hello-world
+  labels:
+    app.kubernetes.io/name: django-hello-world
+    app.kubernetes.io/part-of: devops-project-02
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: django-hello-world
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

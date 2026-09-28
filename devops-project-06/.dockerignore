@@ -1,0 +1,17 @@
+node_modules
+build
+coverage
+npm-debug.log*
+.git
+.github
+.gitignore
+Dockerfile
+.dockerignore
+docker-compose*.yml
+k8s/
+docs/
+images/
+.env
+.env.*
+*.md
+.DS_Store

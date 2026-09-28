@@ -1,0 +1,84 @@
+x-common: &common
+  restart: unless-stopped
+  init: true
+  security_opt:
+    - no-new-privileges:true
+  networks:
+    - zero
+  deploy:
+    resources:
+      limits:
+        cpus: "0.50"
+        memory: 256M
+
+services:
+  frontend:
+    <<: *common
+    build: ./frontend
+    image: devops-project-03-frontend:local
+    container_name: zero-frontend
+    environment:
+      PRODUCTS_SERVICE: products
+      SHOPPING_CART_SERVICE: shopping-cart
+      MERCHANDISE_SERVICE: merchandise
+    ports:
+      - "3000:3000"
+    depends_on:
+      products:
+        condition: service_healthy
+      shopping-cart:
+        condition: service_healthy
+      merchandise:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/health"]
+      interval: 20s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  products:
+    <<: *common
+    build: ./products
+    image: devops-project-03-products:local
+    container_name: zero-products
+    expose:
+      - "3001"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3001/health"]
+      interval: 20s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  shopping-cart:
+    <<: *common
+    build: ./shopping-cart
+    image: devops-project-03-shopping-cart:local
+    container_name: zero-shopping-cart
+    expose:
+      - "3002"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3002/health"]
+      interval: 20s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  merchandise:
+    <<: *common
+    build: ./merchandise
+    image: devops-project-03-merchandise:local
+    container_name: zero-merchandise
+    expose:
+      - "3003"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3003/health"]
+      interval: 20s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+networks:
+  zero:
+    driver: bridge

@@ -8,7 +8,10 @@
     },
     "author": "ROXS",
     "license": "ISC",
+    "engines": {
+        "node": ">=20"
+    },
     "dependencies": {
-        "express": "4.17.1"
+        "express": "4.21.2"
     }
 }

@@ -1,4 +1,8 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
+
+
+def health(request):
+    return JsonResponse({"status": "ok"})
 
 
 def hello_world(request):

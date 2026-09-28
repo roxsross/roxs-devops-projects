@@ -1,0 +1,351 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog
+  namespace: retail-store
+spec:
+  selector:
+    app.kubernetes.io/name: catalog
+  ports:
+    - { name: http, port: 8080, targetPort: http }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog
+  namespace: retail-store
+  labels:
+    app.kubernetes.io/name: catalog
+    app.kubernetes.io/part-of: devops-project-08
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: catalog
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: catalog
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: catalog
+          image: ghcr.io/roxsross/roxs-devops-projects/retail-catalog:latest
+          ports:
+            - { name: http, containerPort: 8080 }
+          env:
+            - name: GIN_MODE
+              value: release
+            - name: DB_ENDPOINT
+              value: catalog-db:3306
+            - name: DB_NAME
+              valueFrom: { configMapKeyRef: { name: retail-config, key: CATALOG_DB_NAME } }
+            - name: DB_USER
+              valueFrom: { configMapKeyRef: { name: retail-config, key: CATALOG_DB_USER } }
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: retail-secrets, key: CATALOG_DB_PASSWORD } }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { cpu: 500m, memory: 256Mi }
+          livenessProbe:
+            httpGet: { path: /health, port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          readinessProbe:
+            httpGet: { path: /health, port: http }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - { name: tmp, emptyDir: {} }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: carts
+  namespace: retail-store
+spec:
+  selector:
+    app.kubernetes.io/name: carts
+  ports:
+    - { name: http, port: 8080, targetPort: http }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: carts
+  namespace: retail-store
+  labels:
+    app.kubernetes.io/name: carts
+    app.kubernetes.io/part-of: devops-project-08
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: carts
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: carts
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: carts
+          image: ghcr.io/roxsross/roxs-devops-projects/retail-cart:latest
+          ports:
+            - { name: http, containerPort: 8080 }
+          env:
+            - name: JAVA_OPTS
+              value: -XX:MaxRAMPercentage=75.0
+            - name: SPRING_PROFILES_ACTIVE
+              value: dynamodb
+            - name: CARTS_DYNAMODB_ENDPOINT
+              value: http://carts-db:8000
+            - name: CARTS_DYNAMODB_CREATETABLE
+              value: "true"
+            - name: AWS_REGION
+              valueFrom: { configMapKeyRef: { name: retail-config, key: AWS_REGION } }
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom: { secretKeyRef: { name: retail-secrets, key: AWS_ACCESS_KEY_ID } }
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom: { secretKeyRef: { name: retail-secrets, key: AWS_SECRET_ACCESS_KEY } }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          resources:
+            requests: { cpu: 100m, memory: 512Mi }
+            limits: { cpu: "1", memory: 1Gi }
+          startupProbe:
+            httpGet: { path: /actuator/health, port: http }
+            failureThreshold: 30
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /actuator/health/liveness, port: http }
+            periodSeconds: 20
+          readinessProbe:
+            httpGet: { path: /actuator/health/readiness, port: http }
+            periodSeconds: 10
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - { name: tmp, emptyDir: {} }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders
+  namespace: retail-store
+spec:
+  selector:
+    app.kubernetes.io/name: orders
+  ports:
+    - { name: http, port: 8080, targetPort: http }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders
+  namespace: retail-store
+  labels:
+    app.kubernetes.io/name: orders
+    app.kubernetes.io/part-of: devops-project-08
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: orders
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: orders
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: orders
+          image: ghcr.io/roxsross/roxs-devops-projects/retail-orders:latest
+          ports:
+            - { name: http, containerPort: 8080 }
+          env:
+            - name: JAVA_OPTS
+              value: -XX:MaxRAMPercentage=75.0
+            - name: SPRING_PROFILES_ACTIVE
+              value: mysql,rabbitmq
+            - name: ORDERS_DB_NAME
+              valueFrom: { configMapKeyRef: { name: retail-config, key: ORDERS_DB_NAME } }
+            - name: SPRING_DATASOURCE_WRITER_URL
+              value: jdbc:mariadb://orders-db:3306/$(ORDERS_DB_NAME)
+            - name: SPRING_DATASOURCE_READER_URL
+              value: jdbc:mariadb://orders-db:3306/$(ORDERS_DB_NAME)
+            - name: SPRING_DATASOURCE_WRITER_USERNAME
+              valueFrom: { configMapKeyRef: { name: retail-config, key: ORDERS_DB_USER } }
+            - name: SPRING_DATASOURCE_READER_USERNAME
+              valueFrom: { configMapKeyRef: { name: retail-config, key: ORDERS_DB_USER } }
+            - name: SPRING_DATASOURCE_WRITER_PASSWORD
+              valueFrom: { secretKeyRef: { name: retail-secrets, key: ORDERS_DB_PASSWORD } }
+            - name: SPRING_DATASOURCE_READER_PASSWORD
+              valueFrom: { secretKeyRef: { name: retail-secrets, key: ORDERS_DB_PASSWORD } }
+            - name: SPRING_RABBITMQ_HOST
+              value: rabbitmq
+            - name: SPRING_RABBITMQ_USERNAME
+              valueFrom: { configMapKeyRef: { name: retail-config, key: RABBITMQ_USER } }
+            - name: SPRING_RABBITMQ_PASSWORD
+              valueFrom: { secretKeyRef: { name: retail-secrets, key: RABBITMQ_PASSWORD } }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          resources:
+            requests: { cpu: 100m, memory: 512Mi }
+            limits: { cpu: "1", memory: 1Gi }
+          startupProbe:
+            httpGet: { path: /actuator/health, port: http }
+            failureThreshold: 30
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /actuator/health/liveness, port: http }
+            periodSeconds: 20
+          readinessProbe:
+            httpGet: { path: /actuator/health/readiness, port: http }
+            periodSeconds: 10
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - { name: tmp, emptyDir: {} }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: checkout
+  namespace: retail-store
+spec:
+  selector:
+    app.kubernetes.io/name: checkout
+  ports:
+    - { name: http, port: 8080, targetPort: http }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkout
+  namespace: retail-store
+  labels:
+    app.kubernetes.io/name: checkout
+    app.kubernetes.io/part-of: devops-project-08
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: checkout
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: checkout
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: checkout
+          image: ghcr.io/roxsross/roxs-devops-projects/retail-checkout:latest
+          ports:
+            - { name: http, containerPort: 8080 }
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: REDIS_URL
+              value: redis://checkout-redis:6379
+            - name: ENDPOINTS_ORDERS
+              value: http://orders:8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+          livenessProbe:
+            httpGet: { path: /health, port: http }
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet: { path: /health, port: http }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - { name: tmp, emptyDir: {} }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: assets
+  namespace: retail-store
+spec:
+  selector:
+    app.kubernetes.io/name: assets
+  ports:
+    - { name: http, port: 8080, targetPort: http }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: assets
+  namespace: retail-store
+  labels:
+    app.kubernetes.io/name: assets
+    app.kubernetes.io/part-of: devops-project-08
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: assets
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: assets
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: assets
+          image: ghcr.io/roxsross/roxs-devops-projects/retail-assets:latest
+          ports:
+            - { name: http, containerPort: 8080 }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          resources:
+            requests: { cpu: 25m, memory: 32Mi }
+            limits: { cpu: 250m, memory: 128Mi }
+          livenessProbe:
+            httpGet: { path: /health, port: http }
+            periodSeconds: 20
+          readinessProbe:
+            httpGet: { path: /health, port: http }
+            periodSeconds: 10
+          volumeMounts:
+            - { name: cache, mountPath: /var/cache/nginx }
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - { name: cache, emptyDir: {} }
+        - { name: tmp, emptyDir: {} }

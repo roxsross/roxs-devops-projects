@@ -1,0 +1,9 @@
+.git
+.gitignore
+Dockerfile
+.dockerignore
+docker-compose*.yml
+scripts/
+buildpack.yml
+*.md
+.DS_Store

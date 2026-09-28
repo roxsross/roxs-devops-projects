@@ -25,7 +25,7 @@ public_bp = Blueprint('public', __name__, template_folder='templates')
 def home():
     count = get_hit_count()
     current_app.logger.info('Acceso a Home')
-    return "<h1>Servicio Web by @roxsross</h1><br><p>Has visitado la página {} veces".format(count)
+    return "<h1>Servicio Web para Cadenas by @roxsross</h1><br><p>Has visitado la página {} veces".format(count)
 
 
 @public_bp.route('/login', methods=['GET', 'POST'])
@@ -38,9 +38,12 @@ def login_user():
 
     user = User.query.filter_by(name=auth.username).first()
 
-    if check_password_hash(user.password, auth.password):
-        token = jwt.encode({'public_id': user.public_id, 'exp': datetime.datetime.now() + datetime.timedelta(minutes=60)}, config.default.SECRET_KEY, algorithm="HS256")
-        #return jsonify({'token': token.decode('UTF-8')})
+    # Mismo mensaje y misma rama para usuario inexistente o password errónea.
+    if user and check_password_hash(user.password, auth.password):
+        expiracion = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+            minutes=config.default.TOKEN_EXPIRATION_MINUTES)
+        token = jwt.encode({'public_id': user.public_id, 'exp': expiracion},
+                           config.default.SECRET_KEY, algorithm="HS256")
         return jsonify({'token': token})
     return make_response('could not verify',  401, {'WWW.Authentication': 'Basic realm: "login required"'})
 
@@ -48,9 +51,16 @@ def login_user():
 @public_bp.route('/signup', methods=['GET', 'POST'])
 def signup_user():
     current_app.logger.info('Acceso a SignUp')
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
 
-    hashed_password = generate_password_hash(data['password'], method='sha256')
+    if not data.get('name') or not data.get('password'):
+        return make_response(jsonify({'message': 'name y password son obligatorios'}), 400)
+
+    if User.query.filter_by(name=data['name']).first():
+        return make_response(jsonify({'message': 'user already exists'}), 409)
+
+    # Werkzeug 3 usa scrypt por defecto; 'sha256' fue eliminado.
+    hashed_password = generate_password_hash(data['password'])
 
     new_user = User(public_id=str(uuid.uuid4()), name=data['name'], password=hashed_password)
     db.session.add(new_user)
@@ -65,15 +75,8 @@ def get_all_users():
     current_app.logger.info('Acceso a ListUsers')
     users = User.query.all()
 
-    result = []
-
-    for user in users:
-        user_data = {}
-        user_data['public_id'] = user.public_id
-        user_data['name'] = user.name
-        user_data['password'] = user.password
-
-        result.append(user_data)
+    # Nunca se devuelve el hash de la password.
+    result = [{'public_id': user.public_id, 'name': user.name} for user in users]
 
     return jsonify({'users': result})
 

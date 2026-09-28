@@ -1,5 +1,6 @@
 .DS_Store
 *.tfvars
+!*.tfvars.example
 .terraform
 *.tfstate*
 *.lock.hcl
@@ -11,4 +12,51 @@ oss-output
 kubeconfig_*
 .idea
 
-.DS_Store
+# ---- Secretos / entorno ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ---- Node ----
+node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+coverage/
+build/
+dist/
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ---- Java ----
+target/
+.gradle/
+
+# ---- Go ----
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+vendor/
+
+# ---- .NET ----
+bin/
+obj/
+
+# ---- Bases de datos locales ----
+*.sqlite3
+*.db

@@ -41,9 +41,12 @@ def token_required(f):
             return make_response(jsonify({'message': 'token expired'}), 403)
 
         try:
-            data = jwt.decode(token, config.default.SECRET_KEY, algorithms="HS256")
+            data = jwt.decode(token, config.default.SECRET_KEY, algorithms=["HS256"])
             current_user = User.query.filter_by(public_id=data['public_id']).first()
-        except:
+        except jwt.PyJWTError:
+            return make_response(jsonify({'message': 'token is invalid'}), 403)
+
+        if current_user is None:
             return make_response(jsonify({'message': 'token is invalid'}), 403)
 
         return f(current_user, *args, **kwargs)

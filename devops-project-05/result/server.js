@@ -8,6 +8,16 @@ var express = require('express'),
 
 var port = process.env.PORT || 4000;
 
+var connectionString = process.env.DATABASE_URL ||
+  'postgres://' + (process.env.POSTGRES_USER || 'postgres') +
+  ':' + (process.env.POSTGRES_PASSWORD || 'postgres') +
+  '@' + (process.env.POSTGRES_HOST || 'db') +
+  '/' + (process.env.POSTGRES_DB || 'postgres');
+
+app.get('/health', function (req, res) {
+  res.json({ status: 'ok' });
+});
+
 io.on('connection', function (socket) {
 
   socket.emit('message', { text : 'Welcome!' });
@@ -18,7 +28,7 @@ io.on('connection', function (socket) {
 });
 
 var pool = new Pool({
-  connectionString: 'postgres://postgres:postgres@db/postgres'
+  connectionString: connectionString
 });
 
 async.retry(

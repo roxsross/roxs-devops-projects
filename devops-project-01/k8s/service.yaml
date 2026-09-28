@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: netflix-clone
+  labels:
+    app.kubernetes.io/name: netflix-clone
+    app.kubernetes.io/part-of: devops-project-01
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: netflix-clone
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

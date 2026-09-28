@@ -1,0 +1,89 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: django-hello-world
+type: Opaque
+stringData:
+  # Reemplazar antes de aplicar:
+  #   kubectl create secret generic django-hello-world --from-literal=DJANGO_SECRET_KEY="$(openssl rand -base64 48)"
+  DJANGO_SECRET_KEY: REPLACE_ME
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: django-hello-world
+data:
+  DJANGO_DEBUG: "false"
+  DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,django-hello-world"
+  DJANGO_LOG_LEVEL: "INFO"
+  DJANGO_DB_PATH: "/app/data/db.sqlite3"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-hello-world
+  labels:
+    app.kubernetes.io/name: django-hello-world
+    app.kubernetes.io/part-of: devops-project-02
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: django-hello-world
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: django-hello-world
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: web
+          image: ghcr.io/roxsross/roxs-devops-projects/devops-project-02:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: django-hello-world
+            - secretRef:
+                name: django-hello-world
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: data
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}

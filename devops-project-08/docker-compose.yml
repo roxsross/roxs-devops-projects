@@ -1,0 +1,242 @@
+name: retail-store
+
+x-java-opts: &java-opts
+  JAVA_OPTS: -XX:MaxRAMPercentage=75.0
+  SERVER_TOMCAT_ACCESSLOG_ENABLED: "true"
+
+x-healthcheck-defaults: &hc-defaults
+  interval: 15s
+  timeout: 5s
+  retries: 10
+  start_period: 60s
+
+services:
+  ui:
+    build:
+      context: ./src/ui
+    image: retail-store/ui:local
+    environment:
+      <<: *java-opts
+      ENDPOINTS_CATALOG: http://catalog:8080
+      ENDPOINTS_CARTS: http://carts:8080
+      ENDPOINTS_ORDERS: http://orders:8080
+      ENDPOINTS_CHECKOUT: http://checkout:8080
+      ENDPOINTS_ASSETS: http://assets:8080
+    ports:
+      - "${UI_PORT:-8888}:8080"
+    depends_on:
+      catalog: { condition: service_healthy }
+      carts: { condition: service_healthy }
+      orders: { condition: service_healthy }
+      checkout: { condition: service_healthy }
+      assets: { condition: service_healthy }
+    healthcheck:
+      <<: *hc-defaults
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/actuator/health"]
+    restart: unless-stopped
+    init: true
+    security_opt: [ "no-new-privileges:true" ]
+    networks: [ retail ]
+    deploy:
+      resources:
+        limits: { cpus: "1.0", memory: 1G }
+
+  catalog:
+    build:
+      context: ./src/catalog
+    image: retail-store/catalog:local
+    environment:
+      GIN_MODE: release
+      DB_ENDPOINT: catalog-db:3306
+      DB_USER: ${CATALOG_DB_USER:-catalog_user}
+      DB_PASSWORD: ${CATALOG_DB_PASSWORD:-secret}
+      DB_NAME: ${CATALOG_DB_NAME:-sampledb}
+    depends_on:
+      catalog-db: { condition: service_healthy }
+    healthcheck:
+      <<: *hc-defaults
+      start_period: 15s
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/health"]
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs: [ /tmp ]
+    security_opt: [ "no-new-privileges:true" ]
+    networks: [ retail ]
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 256M }
+
+  catalog-db:
+    image: mariadb:11.4
+    environment:
+      MARIADB_ROOT_PASSWORD: ${CATALOG_DB_ROOT_PASSWORD:-secret}
+      MARIADB_DATABASE: ${CATALOG_DB_NAME:-sampledb}
+      MARIADB_USER: ${CATALOG_DB_USER:-catalog_user}
+      MARIADB_PASSWORD: ${CATALOG_DB_PASSWORD:-secret}
+    volumes:
+      - catalog_db_data:/var/lib/mysql
+    healthcheck:
+      <<: *hc-defaults
+      start_period: 20s
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+    restart: unless-stopped
+    security_opt: [ "no-new-privileges:true" ]
+    networks: [ retail ]
+
+  carts:
+    build:
+      context: ./src/cart
+    image: retail-store/cart:local
+    environment:
+      <<: *java-opts
+      SPRING_PROFILES_ACTIVE: dynamodb
+      CARTS_DYNAMODB_ENDPOINT: http://carts-db:8000
+      CARTS_DYNAMODB_CREATETABLE: "true"
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-dummy}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-dummy}
+    depends_on:
+      carts-db: { condition: service_started }
+    healthcheck:
+      <<: *hc-defaults
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/actuator/health"]
+    restart: unless-stopped
+    init: true
+    security_opt: [ "no-new-privileges:true" ]
+    networks: [ retail ]
+    deploy:
+      resources:
+        limits: { cpus: "1.0", memory: 1G }
+
+  carts-db:
+    image: amazon/dynamodb-local:2.5.2
+    command: ["-jar", "DynamoDBLocal.jar", "-inMemory", "-sharedDb"]
+    restart: unless-stopped
+    security_opt: [ "no-new-privileges:true" ]
+    networks: [ retail ]
+
+  orders:
+    build:
+      context: ./src/orders
+    image: retail-store/orders:local
+    environment:
+      <<: *java-opts
+      SPRING_PROFILES_ACTIVE: mysql,rabbitmq
+      SPRING_DATASOURCE_WRITER_URL: jdbc:mariadb://orders-db:3306/${ORDERS_DB_NAME:-orders}
+      SPRING_DATASOURCE_WRITER_USERNAME: ${ORDERS_DB_USER:-orders_user}
+      SPRING_DATASOURCE_WRITER_PASSWORD: ${ORDERS_DB_PASSWORD:-secret}
+      SPRING_DATASOURCE_READER_URL: jdbc:mariadb://orders-db:3306/${ORDERS_DB_NAME:-orders}
+      SPRING_DATASOURCE_READER_USERNAME: ${ORDERS_DB_USER:-orders_user}
+      SPRING_DATASOURCE_READER_PASSWORD: ${ORDERS_DB_PASSWORD:-secret}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER:-guest}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+    depends_on:
+      orders-db: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+    healthcheck:
+      <<: *hc-defaults
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/actuator/health"]
+    restart: unless-stopped
+    init: true
+    security_opt: [ "no-new-privileges:true" ]
+    networks: [ retail ]
+    deploy:
+      resources:
+        limits: { cpus: "1.0", memory: 1G }
+
+  orders-db:
+    image: mariadb:11.4
+    environment:
+      MARIADB_ROOT_PASSWORD: ${ORDERS_DB_ROOT_PASSWORD:-secret}
+      MARIADB_DATABASE: ${ORDERS_DB_NAME:-orders}
+      MARIADB_USER: ${ORDERS_DB_USER:-orders_user}
+      MARIADB_PASSWORD: ${ORDERS_DB_PASSWORD:-secret}
+    volumes:
+      - orders_db_data:/var/lib/mysql
+    healthcheck:
+      <<: *hc-defaults
+      start_period: 20s
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+    restart: unless-stopped
+    security_opt: [ "no-new-privileges:true" ]
+    networks: [ retail ]
+
+  checkout:
+    build:
+      context: ./src/checkout
+    image: retail-store/checkout:local
+    environment:
+      REDIS_URL: redis://checkout-redis:6379
+      ENDPOINTS_ORDERS: http://orders:8080
+    depends_on:
+      checkout-redis: { condition: service_healthy }
+    healthcheck:
+      <<: *hc-defaults
+      start_period: 15s
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/health"]
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs: [ /tmp ]
+    security_opt: [ "no-new-privileges:true" ]
+    networks: [ retail ]
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 512M }
+
+  checkout-redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      <<: *hc-defaults
+      start_period: 5s
+      test: ["CMD", "redis-cli", "ping"]
+    restart: unless-stopped
+    security_opt: [ "no-new-privileges:true" ]
+    networks: [ retail ]
+
+  assets:
+    build:
+      context: ./src/assets
+    image: retail-store/assets:local
+    environment:
+      PORT: 8080
+    healthcheck:
+      <<: *hc-defaults
+      start_period: 5s
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+    restart: unless-stopped
+    init: true
+    security_opt: [ "no-new-privileges:true" ]
+    networks: [ retail ]
+    deploy:
+      resources:
+        limits: { cpus: "0.25", memory: 128M }
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    ports:
+      - "${RABBITMQ_MGMT_PORT:-15672}:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      <<: *hc-defaults
+      start_period: 20s
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+    restart: unless-stopped
+    security_opt: [ "no-new-privileges:true" ]
+    networks: [ retail ]
+
+networks:
+  retail:
+    driver: bridge
+
+volumes:
+  catalog_db_data:
+  orders_db_data:
+  rabbitmq_data:

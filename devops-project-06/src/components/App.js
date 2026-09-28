@@ -52,7 +52,7 @@ function App() {
       event.preventDefault();
       setQuery("");
       setWeather({ ...weather, loading: true });
-      const apiKey = "b03a640e5ef6980o4da35b006t5f2942";
+      const apiKey = process.env.REACT_APP_WEATHER_API_KEY;
       const url = `https://api.shecodes.io/weather/v1/current?query=${query}&key=${apiKey}`;
 
       await axios
@@ -71,8 +71,9 @@ function App() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const apiKey = "b03a640e5ef6980o4da35b006t5f2942";
-      const url = `https://api.shecodes.io/weather/v1/current?query=Resistencia&key=${apiKey}`;
+      const apiKey = process.env.REACT_APP_WEATHER_API_KEY;
+      const defaultCity = process.env.REACT_APP_DEFAULT_CITY || "Resistencia";
+      const url = `https://api.shecodes.io/weather/v1/current?query=${defaultCity}&key=${apiKey}`;
 
       try {
         const response = await axios.get(url);
